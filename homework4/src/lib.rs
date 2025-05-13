@@ -23,14 +23,22 @@ pub fn func4(slice: &[u32], idx: usize)-> (&[u32],&[u32]){
 }
 
 ///Принимает слайс и возвращает массив слайсов, содержащий четыре равные (насколько возможно) части исходного слайса.
-pub fn func5(slice: &[u32])->[&[u32];4]{
+fn func5(slice: &[u32])->[&[u32];4]{
 	let cnt_part: usize = 4;
-	let step:usize = (slice.len()+1)/cnt_part;
-	let mut res:[&[u32];4] = [&[]; 4];
-	for idx in 0..(cnt_part-1){
-		res[idx] = &slice[idx*step..(idx+1)*step]
+	let mut res:[&[u32];4] = [&[];4];
+	if slice.len() > 0{
+		let max_in_layer: usize = ((slice.len()-1)/cnt_part)+1;//максимальное количество элементов на уровне
+		
+		//сколько максимальных значений, остальные на один меньше
+		let cnt_max: usize = if slice.len()%cnt_part == 0{ cnt_part} else{ slice.len()%cnt_part };
+		let mut end: usize = 0;
+		for idx in 0..cnt_part{
+			let start = end;
+			end = if idx < cnt_max{start + max_in_layer}else{ start + (max_in_layer-1) };
+			res[idx] = &slice[start..end];
+		}
 	}
-	res[cnt_part-1] = &slice[(cnt_part-1)*step..];
+	
 	res
 }
 
@@ -87,8 +95,7 @@ mod tests {
         //test function 5
         let val = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
         let res = func5( &val[1..8]);
-        //let test_val:[&[u32]; 4] = [&[8,7], &[6, 5], &[4, 3], &[2]];
-        //assert_eq!(res, test_val);
-        println!("{:#?}", res)
+        let test_val:[&[u32]; 4] = [&[8,7], &[6, 5], &[4, 3], &[2]];
+        assert_eq!(res, test_val);
     }
 }
