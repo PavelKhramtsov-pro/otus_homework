@@ -1,5 +1,6 @@
 //структура кольцевого буфера
 struct RingBuffer {
+    size: usize,
     read_idx: usize,
     write_idx: usize,
     data: Vec<u8>,
@@ -8,6 +9,7 @@ struct RingBuffer {
 //создание кольцевого буфера
 fn create(size: usize) -> RingBuffer {
     RingBuffer {
+        size: 0,
         read_idx: 0,
         write_idx: 0,
         data: vec![0; size],
@@ -19,19 +21,12 @@ fn read(rb: &mut RingBuffer, cnt: usize) -> String {
     let mut cnt_read: usize = 0;
     let mut result: Vec<u8> = Vec::new();
 
-    //кол-во записанных данных
-    let mut cnt_data: usize = if rb.write_idx > rb.read_idx {
-        rb.write_idx - rb.read_idx
-    } else {
-        (rb.data.len() - rb.read_idx) + rb.write_idx
-    };
-
     //Чтение данных
-    while cnt_read < cnt && cnt_data > 0 {
+    while cnt_read < cnt && rb.size > 0 {
         result.push(rb.data[rb.read_idx]);
         rb.read_idx = (rb.read_idx + 1) % rb.data.len();
         cnt_read += 1;
-        cnt_data -= 1;
+        rb.size -= 1;
     }
 
     String::from_utf8(result).unwrap()
@@ -42,11 +37,7 @@ fn write(rb: &mut RingBuffer, data: &str) -> usize {
     let mut cnt_write: usize = 0;
 
     //определение свободного места
-    let mut cnt_free: usize = if rb.write_idx < rb.read_idx {
-        (rb.data.len() - rb.read_idx) + rb.write_idx
-    } else {
-        (rb.data.len() - rb.write_idx) + rb.read_idx
-    };
+    let mut cnt_free: usize = rb.data.len() - rb.size;
 
     //запись данных
     while cnt_write < data.len() && cnt_free > 0 {
@@ -54,6 +45,7 @@ fn write(rb: &mut RingBuffer, data: &str) -> usize {
         rb.write_idx = (rb.write_idx + 1) % rb.data.len();
         cnt_write += 1;
         cnt_free -= 1;
+        rb.size += 1;
     }
     cnt_write
 }
